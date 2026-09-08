@@ -48,7 +48,7 @@ const Footer = () => {
       </div>
       <div className="pt-space-lg flex flex-col sm:flex-row items-center justify-between gap-space-sm font-code-md text-code-md text-on-primary-container">
         <p>
-          © 2025 KnowledgeContinuity Inc. Archival Modernism Protocol. All
+          © 2026 KnowledgeContinuity Inc. Archival Modernism Protocol. All
           rights reserved.
         </p>
         <div className="flex items-center gap-space-xs">

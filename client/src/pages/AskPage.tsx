@@ -1,8 +1,23 @@
+import { FormEvent, useState } from 'react'
 import Footer from '@/components/subparts/Footer'
 import Navbar from '@/components/subparts/Navbar'
-import React from 'react'
 
 const AskPage = () => {
+  const [queryPrompt, setQueryPrompt] = useState('')
+  const [submittedQuery, setSubmittedQuery] = useState(
+    'Why did we disable connection pooling on checkout in March?',
+  )
+
+  const handleUserQuery = (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault()
+
+    const trimmedPrompt = queryPrompt.trim()
+    if (!trimmedPrompt) return
+
+    setSubmittedQuery(trimmedPrompt)
+    setQueryPrompt('')
+  }
+
   return (
     <div>
       <Navbar/>
@@ -34,7 +49,7 @@ const AskPage = () => {
             className="font-serif text-[18px] md:text-[20px] text-[#0c1c32] font-medium leading-snug tracking-tight"
             id="displayed-query"
           >
-            Why did we disable connection pooling on checkout in March?
+            {submittedQuery}
           </p>
         </div>
         <span className="font-code-md text-[10px] uppercase font-semibold text-[#2D5A3D] bg-[#2D5A3D]/10 px-2 py-0.5 rounded border border-[#2D5A3D]/20 shrink-0">
@@ -88,7 +103,7 @@ const AskPage = () => {
           <span>Production Remediation Patch · INC-419 · ENV/PROD</span>
           <button
             className="hover:text-white flex items-center gap-1 transition-colors text-[11px] text-[#b8c7e4]"
-            onclick="navigator.clipboard.writeText('DATABASE_URL=postgres://app:sec@pooler.internal:6432/checkout?pool_mode=transaction&idle_timeout=2500ms')"
+            onClick={() => navigator.clipboard.writeText('DATABASE_URL=postgres://app:sec@pooler.internal:6432/checkout?pool_mode=transaction&idle_timeout=2500ms')}
           >
             <span className="material-symbols-outlined text-[13px]">
               content_copy
@@ -141,7 +156,7 @@ const AskPage = () => {
           </button>
           <button
             className="w-8 h-8 rounded-md flex items-center justify-center border border-[#D2C7B8] bg-[#f0e7dd]/40 text-[#44474d] hover:text-[#0c1c32] hover:border-[#223148] transition-colors"
-            onclick="navigator.clipboard.writeText(window.location.href)"
+            onClick={() => navigator.clipboard.writeText(window.location.href)}
             title="Copy citation"
           >
             <span className="material-symbols-outlined text-[16px]">
@@ -302,19 +317,19 @@ const AskPage = () => {
       <div className="flex flex-wrap gap-2">
         <button
           className="text-left px-3 py-1.5 rounded-full bg-white hover:bg-[#f0e7dd]/60 border border-[#D4CFC0] text-body-sm text-[12px] text-[#1f1b15] hover:text-[#0c1c32] transition-colors"
-          onclick="setQueryPrompt('How was the Redis memory leak mitigated during the v2.4 rollout?')"
+          onClick={() => setQueryPrompt('How was the Redis memory leak mitigated during the v2.4 rollout?')}
         >
           "How was the Redis memory leak mitigated during the v2.4 rollout?"
         </button>
         <button
           className="text-left px-3 py-1.5 rounded-full bg-white hover:bg-[#f0e7dd]/60 border border-[#D4CFC0] text-body-sm text-[12px] text-[#1f1b15] hover:text-[#0c1c32] transition-colors"
-          onclick="setQueryPrompt('What was the workaround for Envoy TCP keepalive timeouts?')"
+          onClick={() => setQueryPrompt('What was the workaround for Envoy TCP keepalive timeouts?')}
         >
           "What was the workaround for Envoy TCP keepalive timeouts?"
         </button>
         <button
           className="text-left px-3 py-1.5 rounded-full bg-white hover:bg-[#f0e7dd]/60 border border-[#D4CFC0] text-body-sm text-[12px] text-[#1f1b15] hover:text-[#0c1c32] transition-colors"
-          onclick="setQueryPrompt('Who owns the fallback manual DNS failover switch if primary Aurora cluster locks up?')"
+          onClick={() => setQueryPrompt('Who owns the fallback manual DNS failover switch if primary Aurora cluster locks up?')}
         >
           "Who owns the fallback manual DNS failover switch if primary Aurora
           cluster locks up?"
@@ -325,7 +340,7 @@ const AskPage = () => {
       <form
         className="relative w-full"
         id="ask-search-form"
-        onsubmit="event.preventDefault(); handleUserQuery();"
+        onSubmit={handleUserQuery}
       >
         <div className="relative flex items-center bg-white rounded-xl border border-[#D4CFC0] shadow-xs focus-within:border-[#2D5A3D] focus-within:ring-2 focus-within:ring-[#2D5A3D]/20 transition-all">
           <div className="pl-4 text-[#505f78] flex items-center pointer-events-none">
@@ -337,8 +352,10 @@ const AskPage = () => {
             autoComplete="off"
             className="w-full py-3.5 pl-3 pr-14 bg-transparent font-body-md text-[14px] text-[#0c1c32] placeholder:text-[#8a99b5] focus:outline-none"
             id="user-query-input"
+            onChange={(event) => setQueryPrompt(event.target.value)}
             placeholder="Ask a follow-up or search past postmortems, PRs, and Slack discussions..."
             type="text"
+            value={queryPrompt}
           />
           <button
             className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-[#2D5A3D] hover:bg-[#234730] text-white rounded-lg flex items-center justify-center transition-all shadow-xs"
