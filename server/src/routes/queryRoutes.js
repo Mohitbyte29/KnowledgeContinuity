@@ -1,17 +1,13 @@
-import { Router } from "express";
+// server/src/routes/queryRoutes.js
+import express from "express";
+import {
+  searchKnowledge,
+  handleFeedback,
+} from "../controllers/queryController.js";
 
-const router = new Router();
+const router = express.Router();
 
-router.post('/api/query/search', (req, res) => {
-  res.json({ message: 'Search query endpoint' });
-});
+router.post("/search", searchKnowledge);
+router.post("/feedback", handleFeedback);
 
-router.post('/api/query/feedback', (req, res) => {
-  res.json({ message: 'feedback query endpoint' });
-});
-
-router.get('/api/query/history', (req, res) => {
-  res.json({ message: 'history query endpoint' });
-});
-
-export const queryRoutes = router;
+export default router;
