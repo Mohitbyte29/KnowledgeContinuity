@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import PersonaSelector, { PersonaType } from '../components/shared/PersonaSelector'
+import PersonaSelector, { PersonaType } from '../components/shared/PersonalSelector.js'
 import { useUserContext } from '../context/UserContext'
-import api from '../services/api'
+import { api } from '../services/api'
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate()

@@ -11,7 +11,7 @@ const SEED_DIR = path.join(__dirname, "..", "data", "seed");
 function loadJSON(filename) {
   const filePath = path.join(SEED_DIR, filename);
   const raw = fs.readFileSync(filePath, "utf-8");
-  return JSON.parse(raw);
+  return raw.trim() ? JSON.parse(raw) : [];
 }
 
 /**
@@ -59,4 +59,8 @@ export function mineDailyBatch(date) {
 export function mineFullHistory() {
   const data = loadJSON("priya_full_history.json");
   return data.map((item) => normalizeItem(item, "offboarding_gap"));
+}
+
+export function getDailyBatchSources(date) {
+  return mineDailyBatch(date);
 }

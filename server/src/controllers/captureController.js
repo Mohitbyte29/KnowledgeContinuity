@@ -1,4 +1,4 @@
-import { mineDailyBatch } from "../services/miningService.js";
+import { getDailyBatchSources, mineDailyBatch } from "../services/miningService.js";
 import { filterItems } from "../services/filteringService.js";
 import { maskItems } from "../services/maskingService.js";
 import { extractItems } from "../services/extractionService.js";
@@ -215,5 +215,14 @@ export async function submitInterviewAnswers(req, res) {
     return res
       .status(500)
       .json({ error: "Failed to process interview answers" });
+  }
+}
+
+export function getDailyBatchSourceItems(req, res) {
+  try {
+    return res.json({ items: getDailyBatchSources(req.query.date) });
+  } catch (err) {
+    console.error("getDailyBatchSourceItems failed:", err);
+    return res.status(500).json({ error: "Failed to load source items" });
   }
 }
