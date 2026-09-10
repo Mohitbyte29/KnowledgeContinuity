@@ -80,4 +80,4 @@ const ExtractionCounter: React.FC<ExtractionCounterProps> = ({
   )
 }
 
-export default ExtractionCounter
+export default ExtractionCounter;

@@ -4,7 +4,7 @@ import axios from 'axios'
 // (client-side) to point at a different server without touching this file.
 const BASE_URL = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5000/api'
 
-const api = axios.create({
+const apiFile = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
@@ -14,7 +14,7 @@ const api = axios.create({
 
 // Normalize errors so every catch block downstream gets a readable message,
 // whether the failure was a network drop, a timeout, or a real 4xx/5xx from Express.
-api.interceptors.response.use(
+apiFile.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.code === 'ECONNABORTED') {
@@ -65,4 +65,4 @@ export const endpoints = {
   getQueryHistory: () => api.get('/query/history'),
 }
 
-export default api
+export default apiFile

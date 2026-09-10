@@ -8,25 +8,27 @@ import { embedText } from "../services/embeddingService.js";
 import { mineFullHistory } from "../services/miningService.js";
 import { findGaps } from "../services/gapCheckService.js";
 import { attachInterviewQuestions } from "../services/interviewService.js";
+import { updateGraphForEntry } from "../services/graphService.js";
+
 
 export async function runDailyBatch(req, res) {
   try {
     const { date } = req.body; // optional — defaults to latest seeded day inside miningService
 
     // Stage 1: Mining
-    const minedItems = mineDailyBatch(date);
+    const minedItems = mineDailyBatch(date); // ---> collect today's employee activity 
     if (minedItems.length === 0) {
       return res.json({ mined: 0, filtered: 0, discarded: 0, drafts: [] });
     }
 
     // Stage 2: Relevance filtering (heuristic + LLM pass)
-    const { kept, discarded } = await filterItems(minedItems);
+    const { kept, discarded } = await filterItems(minedItems); // ---> Removes irrelevant content.
 
     // Stage 3: PII masking
-    const maskedItems = await maskItems(kept);
+    const maskedItems = await maskItems(kept); // ---> Hides sensitive information (PII).
 
     // Stage 4: AI extraction
-    const drafts = await extractItems(maskedItems);
+    const drafts = await extractItems(maskedItems); // ---> AI extracts structured knowledge.
 
     // Stage 5: Re-pair drafts with their original mined item (need date/signals for scoring)
     const itemsBySourceId = new Map(kept.map((i) => [i.sourceId, i]));
@@ -37,7 +39,7 @@ export async function runDailyBatch(req, res) {
       })
       .filter(Boolean);
 
-    const rankedDrafts = scoreAndRank(itemsWithDrafts);
+    const rankedDrafts = scoreAndRank(itemsWithDrafts); // ---> Prioritizes important knowledge.
 
     return res.json({
       mined: minedItems.length,
@@ -74,9 +76,9 @@ export async function saveEntries(req, res) {
       ]
         .filter(Boolean)
         .join(" ");
-      const vector = await embedText(embeddingInput);
+      const vector = await embedText(embeddingInput); // ---> Converts text into vectors.
 
-      const doc = await KnowledgeEntry.create({
+      const doc = await KnowledgeEntry.create({ // ---> MongoDB model.
         problem: merged.problem,
         symptom: merged.symptom,
         solution: merged.solution,
@@ -94,6 +96,16 @@ export async function saveEntries(req, res) {
       });
 
       saved.push(doc._id);
+
+       // Knowledge graph: link this entry to related entries (shared tags >
+      // shared project > shared author). Wrapped in its own try/catch so a
+      // graph-linking failure never rolls back or blocks the actual save —
+      // the entry is already safely persisted above regardless of this.
+      try {
+        await updateGraphForEntry(doc);
+      } catch (graphErr) {
+        console.error(`updateGraphForEntry failed for entry ${doc._id}:`, graphErr);
+      }
     }
 
     return res.json({
@@ -114,7 +126,7 @@ export async function saveEntries(req, res) {
 export async function runOffboardingGapCheck(req, res) {
   try {
     // Stage 1: Mine the employee's ENTIRE history (seeded for demo)
-    const fullHistory = mineFullHistory();
+    const fullHistory = mineFullHistory(); // ---> Gets complete employee history.
     if (fullHistory.length === 0) {
       return res.json({
         totalMined: 0,
@@ -128,7 +140,7 @@ export async function runOffboardingGapCheck(req, res) {
 
     // Stage 2: Gap check — diff against what's already stored in MongoDB
     const { gaps, alreadyCapturedCount, totalMined } =
-      await findGaps(fullHistory);
+      await findGaps(fullHistory); // ---> Finds missing knowledge.
 
     if (gaps.length === 0) {
       // Edge case worth handling explicitly: nothing to review.
@@ -147,7 +159,9 @@ export async function runOffboardingGapCheck(req, res) {
     // Stage 3: Relevance filtering — same two-pass logic as daily batch,
     // applied ONLY to the surviving gap items (not the whole history)
     const { kept, discarded } = await filterItems(gaps);
-
+    // Stage 3.1: Filter out items that are not relevant
+    // Stage 3.2: Filter out items that are already captured
+    // Stage 3.3: Filter out items that are discarded
     // Stage 4: PII masking (identical to daily-batch path)
     const maskedItems = await maskItems(kept);
 
@@ -166,7 +180,7 @@ export async function runOffboardingGapCheck(req, res) {
       .filter(Boolean);
 
     const rankedDrafts = scoreAndRank(itemsWithDrafts);
-    const draftsWithQuestions = await attachInterviewQuestions(rankedDrafts);
+    const draftsWithQuestions = await attachInterviewQuestions(rankedDrafts); // ---> Generates follow-up questions.
 
     return res.json({
       totalMined,

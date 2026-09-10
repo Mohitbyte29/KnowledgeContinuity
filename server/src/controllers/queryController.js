@@ -18,19 +18,19 @@ export async function searchKnowledge(req, res) {
     }
 
     // Stage 1: embed the query
-    const queryVector = await embedText(query.trim());
+    const queryVector = await embedText(query.trim()); // ---> Converts text into an embedding/vector
 
     // Stage 2: semantic search (optionally project-scoped)
-    const matches = await findSimilarEntries(queryVector, {
+    const matches = await findSimilarEntries(queryVector, { // ---> Finds semantically similar knowledge entries
       project: project || undefined,
-      topK: 5,
+      topK: 5, // ---> So the system retrieves the top 5 relevant entries.
     });
 
     // Stage 3: synthesize the answer (handles the zero-match case internally)
-    const answer = await synthesizeAnswer(query, matches);
+    const answer = await synthesizeAnswer(query, matches); // ---> Generates the final AI answer
 
     // Stage 4: related experts (handles zero-match case internally — returns [])
-    const relatedExperts = await findRelatedExperts(matches);
+    const relatedExperts = await findRelatedExperts(matches); // ---> Finds people related to the retrieved knowledge
 
     // Stage 5: shape citations from the SAME matches the answer was built from —
     // never more than what synthesisService actually saw, so the citation
@@ -69,7 +69,7 @@ export async function handleFeedback(req, res) {
       return res.status(400).json({ error: "entryId and rating are required" });
     }
 
-    const result = await submitFeedback(entryId, rating);
+    const result = await submitFeedback(entryId, rating); // ---> Handles user feedback
 
     if (!result.success) {
       // Distinguish "bad input" (400) from "valid input, entry just doesn't exist" (404)

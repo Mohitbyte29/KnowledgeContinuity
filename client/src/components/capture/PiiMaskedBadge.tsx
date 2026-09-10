@@ -11,7 +11,7 @@ interface PiiMaskedBadgeProps {
 const PiiMaskedBadge: React.FC<PiiMaskedBadgeProps> = ({
   count,
   tooltip,
-  className = '',
+  className = ''
 }) => {
   const [showTooltip, setShowTooltip] = useState(false)
 

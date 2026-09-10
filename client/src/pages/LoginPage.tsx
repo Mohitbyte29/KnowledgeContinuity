@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import PersonaSelector, { PersonaType } from '../components/shared/PersonalSelector.js'
+import PersonaSelector, { type PersonaType } from '../components/shared/PersonalSelector.js'
 import { useUserContext } from '../context/UserContext'
-import { api } from '../services/api'
+import apiFile from '../services/api'
+import axios from 'axios'
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate()
@@ -18,7 +19,7 @@ const LoginPage: React.FC = () => {
     setError(null)
 
     try {
-      await api.post('/auth/login', { persona })
+      await apiFile.post('/auth/login', { persona })
       setPersona(persona)
       navigate(destination)
     } catch (err) {

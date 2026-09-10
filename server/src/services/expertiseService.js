@@ -17,7 +17,7 @@ export async function findRelatedExperts(matches) {
   if (!matches || matches.length === 0) return [];
 
   const primaryAuthor = matches[0]?.author?.name;
-  const allTags = [...new Set(matches.flatMap((m) => m.tags || []))];
+  const allTags = [...new Set(matches.flatMap((m) => m.tags || []))]; // ---> combine all arrays and remove duplicates
 
   if (allTags.length === 0) return [];
 
