@@ -1,39 +1,16 @@
-import { Router } from "express";
+import express from "express";
+import {
+  runDailyBatch,
+  saveEntries,
+  runOffboardingGapCheck,
+  submitInterviewAnswers,
+} from "../controllers/captureController.js";
 
-const router = new Router();
+const router = express.Router();
 
+router.post("/daily-batch", runDailyBatch);
+router.post("/save", saveEntries);
+router.post("/offboarding/gap-check", runOffboardingGapCheck);
+router.post("/interview", submitInterviewAnswers);
 
-router.post('/api/capture/daily-batch', (req, res) => {
-  res.json({ message: 'Daily batch capture endpoint' });
-});
-
-router.post('/api/capture/offboarding/start', (req, res) => {
-  res.json({ message: 'Weekly batch capture endpoint' });
-});
-
-router.get('/api/capture/offboarding/gap-check', (req, res) => {
-    res.json({ message: 'Gap check capture endpoint' });
-});
-
-router.post('/api/capture/extract', (req, res) => {
-    res.json({ message: 'Extract capture endpoint' });
-});
-
-router.post('/api/capture/interview', (req, res) => {
-    res.json({ message: 'Interview capture endpoint' });
-});
-
-router.get('/api/capture/entries/pending', (req, res) => {
-    res.json({ message: 'Pending entries capture endpoint' });
-});
-
-router.post('/api/capture/review', (req, res) => {
-    res.json({ message: 'Pending entries capture endpoint' });
-});
-
-router.post('/api/capture/save', (req, res) => {
-    res.json({ message: 'Save capture endpoint' });
-});
-
-
-export const captureRoutes = router;
+export default router;
