@@ -1,20 +1,16 @@
 import axios from 'axios'
 
-// Falls back to localhost:5000 for local dev — set VITE_API_BASE_URL in .env
-// (client-side) to point at a different server without touching this file.
 const BASE_URL = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5000/api'
 
-const apiFile = axios.create({
+export const api = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 20000, // extraction/synthesis calls can be slow — give them room before we call it a failure
+  timeout: 20000,
 })
 
-// Normalize errors so every catch block downstream gets a readable message,
-// whether the failure was a network drop, a timeout, or a real 4xx/5xx from Express.
-apiFile.interceptors.response.use(
+api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.code === 'ECONNABORTED') {
@@ -29,40 +25,23 @@ apiFile.interceptors.response.use(
   }
 )
 
-/**
- * Named endpoint helpers — optional convenience layer on top of the raw instance.
- * Every component built so far calls `api.get(...)` / `api.post(...)` directly,
- * which still works; these exist for call sites that prefer a named function
- * over remembering the exact path string.
- */
 export const endpoints = {
-  // auth
-  login: (persona) => api.post('/auth/login', { persona }),
-
-  // projects
+  login: (persona: unknown) => api.post('/auth/login', { persona }),
   getProjects: () => api.get('/projects'),
-
-  // capture — daily batch
   runDailyBatch: () => api.post('/capture/daily-batch'),
-
-  // capture — offboarding
-  startOffboarding: (employeeId) => api.post('/capture/offboarding/start', { employeeId }),
-  getOffboardingGaps: (employeeId) =>
+  startOffboarding: (employeeId: string) => api.post('/capture/offboarding/start', { employeeId }),
+  getOffboardingGaps: (employeeId: string) =>
     api.get('/capture/offboarding/gap-check', { params: { employeeId } }),
-
-  // capture — shared
-  extractEntries: (rawItems) => api.post('/capture/extract', { rawItems }),
-  submitInterviewAnswers: (employeeId, answers) =>
+  extractEntries: (rawItems: unknown[]) => api.post('/capture/extract', { rawItems }),
+  submitInterviewAnswers: (employeeId: string, answers: unknown[]) =>
     api.post('/capture/interview', { employeeId, answers }),
-  getPendingEntries: (employeeId) =>
+  getPendingEntries: (employeeId: string) =>
     api.get('/capture/entries/pending', { params: { employeeId } }),
-  submitReview: (decisions) => api.post('/capture/review', { decisions }),
-  saveApprovedEntries: (entryIds) => api.post('/capture/save', { entryIds }),
-
-  // query / retrieval
-  search: (query, projectId) => api.post('/query/search', { query, projectId }),
-  submitFeedback: (entryId, rating) => api.post('/query/feedback', { entryId, rating }),
+  submitReview: (decisions: unknown[]) => api.post('/capture/review', { decisions }),
+  saveApprovedEntries: (entryIds: string[]) => api.post('/capture/save', { entryIds }),
+  search: (query: string, projectId?: string) => api.post('/query/search', { query, projectId }),
+  submitFeedback: (entryId: string, rating: 'up' | 'down') => api.post('/query/feedback', { entryId, rating }),
   getQueryHistory: () => api.get('/query/history'),
 }
 
-export default apiFile
+export default api

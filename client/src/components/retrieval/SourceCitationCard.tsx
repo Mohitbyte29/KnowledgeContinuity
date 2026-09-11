@@ -1,64 +1,83 @@
 import React from 'react'
-import type { SourceCitation } from './ChatWindow'
+import { motion } from 'motion/react'
+import type { SourceCitation } from '../../types'
+import { FileText, Ticket, MessageSquare, GitPullRequest, AlertTriangle, Calendar, CheckCircle2 } from 'lucide-react'
 
-interface SourceCitationCardProps extends SourceCitation {
+interface SourceCitationCardProps {
+  source: SourceCitation
   className?: string
 }
 
-const matchColor = (pct?: number) => {
-  if (pct === undefined) return null
-  if (pct >= 85) return '#2D5A3D'
-  if (pct >= 60) return '#475f86'
-  return '#B85C38'
-}
-
-const SourceCitationCard: React.FC<SourceCitationCardProps> = ({
-  title,
-  sourceLink,
-  author,
-  date,
-  matchPct,
+export const SourceCitationCard: React.FC<SourceCitationCardProps> = ({
+  source,
   className = '',
 }) => {
-  const color = matchColor(matchPct)
-  const formattedDate = (() => {
-    const d = new Date(date)
-    return isNaN(d.getTime())
-      ? date
-      : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
-  })()
+  const getSourceBadge = () => {
+    switch (source.sourceType) {
+      case 'Ticket':
+        return { icon: <Ticket className="w-3.5 h-3.5" />, color: 'bg-[#FF6A00]/15 text-[#FF6A00] border-[#FF6A00]/30' }
+      case 'PR':
+        return { icon: <GitPullRequest className="w-3.5 h-3.5" />, color: 'bg-[#3B82F6]/15 text-[#3B82F6] border-[#3B82F6]/30' }
+      case 'Slack':
+        return { icon: <MessageSquare className="w-3.5 h-3.5" />, color: 'bg-[#A855F7]/15 text-[#A855F7] border-[#A855F7]/30' }
+      case 'Incident':
+      case 'Post-Mortem':
+        return { icon: <AlertTriangle className="w-3.5 h-3.5" />, color: 'bg-[#EF2B2D]/15 text-[#EF2B2D] border-[#EF2B2D]/30' }
+      default:
+        return { icon: <FileText className="w-3.5 h-3.5" />, color: 'bg-[#27272A] text-[#A1A1AA] border-[#3F3F46]' }
+    }
+  }
+
+  const badge = getSourceBadge()
 
   return (
-    <a
-      href={sourceLink}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group flex items-center gap-3 rounded-md border border-[#223148]/10 bg-[#fbf7f2] px-3 py-2.5 hover:border-[#223148]/25 hover:bg-white transition-colors"
+    <motion.div 
+      whileHover={{ y: -2 }}
+      className={`rounded-xl bg-[#141414] border border-[#27272A] hover:border-[#3F3F46] p-4 transition-all shadow-md ${className}`}
     >
-      <span className="w-7 h-7 rounded-md bg-[#223148]/8 flex items-center justify-center shrink-0">
-        <span className="material-symbols-outlined text-[15px] text-[#223148]">description</span>
-      </span>
+      {/* Top Header */}
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${badge.color}`}>
+            {badge.icon}
+            <span>{source.sourceType.toUpperCase()}</span>
+          </span>
+          <span className="text-[12px] font-mono text-[#A1A1AA]">
+            {source.sourceRef}
+          </span>
+        </div>
 
-      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-        <p className="font-body-sm text-[13px] font-medium text-[#0c1c32] truncate">{title}</p>
-        <p className="font-code-md text-[11px] text-[#8a99b5]">
-          <span className="text-[#475f86] font-medium">{author}</span> · {formattedDate}
-        </p>
+        <span className="text-[11px] font-mono font-bold text-[#22C55E] bg-[#22C55E]/10 border border-[#22C55E]/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+          <CheckCircle2 className="w-3 h-3" />
+          <span>{source.similarityScore}% MATCH</span>
+        </span>
       </div>
 
-      {matchPct !== undefined && color && (
-        <span
-          className="font-code-md text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
-          style={{ color, backgroundColor: `${color}1A` }}
-        >
-          {matchPct}%
-        </span>
-      )}
+      {/* Problem / Title */}
+      <h4 className="text-[14px] font-semibold text-white mb-1.5 leading-snug">
+        {source.title}
+      </h4>
 
-      <span className="material-symbols-outlined text-[15px] text-[#8a99b5] group-hover:text-[#223148] group-hover:translate-x-0.5 transition-all shrink-0">
-        arrow_outward
-      </span>
-    </a>
+      {/* Snippet */}
+      <p className="text-[12px] text-[#A1A1AA] leading-relaxed mb-3 line-clamp-2">
+        {source.snippet}
+      </p>
+
+      {/* Author & Date Footer */}
+      <div className="pt-2 border-t border-[#27272A]/70 flex items-center justify-between text-[11px] text-[#71717A]">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded-full bg-[#FF6A00]/20 text-[#FF6A00] text-[10px] font-bold flex items-center justify-center">
+            {source.authorInitials || 'PS'}
+          </div>
+          <span className="font-medium text-[#A1A1AA]">{source.author}</span>
+        </div>
+
+        <div className="flex items-center gap-1 text-[#71717A]">
+          <Calendar className="w-3 h-3" />
+          <span>{source.date}</span>
+        </div>
+      </div>
+    </motion.div>
   )
 }
 

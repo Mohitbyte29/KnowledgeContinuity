@@ -1,88 +1,92 @@
-import React, { useEffect, useState } from 'react'
-import api from '../../services/api'
-
-export interface Project {
-  id: string
-  name: string
-}
+import React, { useState } from 'react'
+import { ChevronDown, FolderGit2, Check, Sparkles } from 'lucide-react'
 
 interface ProjectDropdownProps {
-  /** Currently selected project id, or null for "All projects". Controlled by the parent. */
-  value: string | null
-  onChange: (projectId: string | null) => void
-  /** Whether to include an "All projects" option. Defaults to true. */
-  allowAll?: boolean
-  /** Visual size. 'sm' fits inline in a command bar, 'md' is the default standalone size. */
-  size?: 'sm' | 'md'
+  selectedProject: string
+  onSelectProject: (project: string) => void
   className?: string
 }
 
-const ProjectDropdown: React.FC<ProjectDropdownProps> = ({
-  value,
-  onChange,
-  allowAll = true,
-  size = 'md',
+const PROJECTS = [
+  { id: 'all', label: 'Search all projects', desc: 'Global institutional memory across all teams' },
+  { id: 'Payments Team', label: 'Payments Team', desc: 'Stripe, checkout, webhooks, settlement & bank APIs' },
+  { id: 'Core Infrastructure', label: 'Core Infrastructure', desc: 'Kubernetes, AWS Aurora, Envoy ingress & caching' },
+  { id: 'Auth & Identity', label: 'Auth & Identity', desc: 'OAuth2, JWT authentication, session tokens & RBAC' },
+  { id: 'Checkout Flow', label: 'Checkout Flow', desc: 'Frontend cart, tokenization, mobile SDKs & fraud checks' },
+]
+
+export const ProjectDropdown: React.FC<ProjectDropdownProps> = ({
+  selectedProject,
+  onSelectProject,
   className = '',
 }) => {
-  const [projects, setProjects] = useState<Project[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
-
-    api
-      .get('/projects')
-      .then((res) => {
-        if (!cancelled) setProjects(res.data.projects ?? res.data)
-      })
-      .catch(() => {
-        if (!cancelled) setHasError(true)
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  const sizeClasses =
-    size === 'sm'
-      ? 'text-[12px] py-1.5 pl-3 pr-7'
-      : 'text-[14px] py-2.5 pl-3.5 pr-8'
+  const current = PROJECTS.find((p) => p.label === selectedProject || (selectedProject === 'all' && p.id === 'all')) || PROJECTS[1]
 
   return (
-    <div className={`relative inline-flex items-center ${className}`}>
-      <select
-        value={value ?? ''}
-        onChange={(e) => onChange(e.target.value || null)}
-        disabled={isLoading || hasError}
-        className={`appearance-none rounded-full border border-[#223148]/20 bg-white text-[#0c1c32] font-body-md font-medium outline-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 focus:border-[#223148] transition-colors ${sizeClasses}`}
-      >
-        {allowAll && <option value="">All projects</option>}
-        {projects.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.name}
-          </option>
-        ))}
-      </select>
-
-      <span className="pointer-events-none absolute right-2.5 flex items-center">
-        <span
-          className={`material-symbols-outlined text-[16px] text-[#505f78] ${
-            isLoading ? 'animate-spin' : ''
-          }`}
+    <div className={`relative inline-block text-left ${className}`}>
+      <div className="flex items-center gap-2">
+        <span className="text-[13px] text-[#A1A1AA] font-medium hidden sm:inline">
+          Searching in:
+        </span>
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#141414] hover:bg-[#1c1c20] border border-[#27272A] hover:border-[#FF6A00]/50 text-[13px] font-semibold text-white transition-all shadow-sm group"
         >
-          {isLoading ? 'progress_activity' : 'expand_more'}
-        </span>
-      </span>
+          <FolderGit2 className="w-3.5 h-3.5 text-[#FF6A00]" />
+          <span>{current.label}</span>
+          <ChevronDown className="w-3.5 h-3.5 text-[#71717A] group-hover:text-white transition-colors" />
+        </button>
+      </div>
 
-      {hasError && (
-        <span className="ml-2 font-code-md text-[10px] text-[#B85C38]">
-          Couldn't load projects
-        </span>
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-80 rounded-2xl bg-[#141414] border border-[#27272A] shadow-2xl p-2 z-50 animate-slide-up">
+            <div className="px-3 py-2 border-b border-[#27272A] mb-1 flex items-center justify-between">
+              <span className="text-[11px] font-bold text-[#71717A] uppercase tracking-wider">
+                Select Project Scope
+              </span>
+              <Sparkles className="w-3.5 h-3.5 text-[#FF6A00]" />
+            </div>
+
+            <div className="space-y-1">
+              {PROJECTS.map((proj) => {
+                const isSelected = selectedProject === proj.label || (selectedProject === 'all' && proj.id === 'all')
+                return (
+                  <button
+                    key={proj.id}
+                    type="button"
+                    onClick={() => {
+                      onSelectProject(proj.label)
+                      setIsOpen(false)
+                    }}
+                    className={`w-full flex items-start gap-2.5 p-2.5 rounded-xl text-left transition-all ${
+                      isSelected
+                        ? 'bg-[#FF6A00]/10 border border-[#FF6A00]/30 text-white'
+                        : 'hover:bg-[#1f1f23] text-[#A1A1AA] hover:text-white'
+                    }`}
+                  >
+                    <FolderGit2 className={`w-4 h-4 shrink-0 mt-0.5 ${isSelected ? 'text-[#FF6A00]' : 'text-[#71717A]'}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[13px] font-semibold text-white truncate">
+                          {proj.label}
+                        </span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[#FF6A00]" />}
+                      </div>
+                      <p className="text-[11px] text-[#71717A] truncate">
+                        {proj.desc}
+                      </p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </>
       )}
     </div>
   )

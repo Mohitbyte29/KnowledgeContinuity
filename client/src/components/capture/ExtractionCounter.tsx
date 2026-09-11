@@ -1,83 +1,82 @@
-import React from 'react'
+import { CheckCircle2, Loader2, Cpu } from 'lucide-react'
 
 interface ExtractionCounterProps {
-  /** How many entries have been revealed so far. */
-  current: number
-  /** Total number of entries being extracted. */
-  total: number
-  /** Text shown before extraction starts (current === 0). Defaults to "Analyzing your work history...". */
-  idleLabel?: string
-  /** Text shown once current >= total. Defaults to "Extraction complete". */
-  completeLabel?: string
-  /** Extra classes for the wrapping element. */
+  currentIndex: number
+  totalItems: number
+  isComplete: boolean
+  isExtracting: boolean
   className?: string
 }
 
-const ExtractionCounter: React.FC<ExtractionCounterProps> = ({
-  current,
-  total,
-  idleLabel = 'Analyzing your work history...',
-  completeLabel = 'Extraction complete',
+export const ExtractionCounter: React.FC<ExtractionCounterProps> = ({
+  currentIndex,
+  totalItems,
+  isComplete,
+  isExtracting,
   className = '',
 }) => {
-  const clampedCurrent = Math.min(current, total)
-  const isComplete = total > 0 && clampedCurrent >= total
-  const hasStarted = clampedCurrent > 0
-  const progressPct = total > 0 ? (clampedCurrent / total) * 100 : 0
+  if (!isExtracting && !isComplete) return null
 
-  const label = !hasStarted
-    ? idleLabel
-    : isComplete
-    ? completeLabel
-    : `Extracting entry ${clampedCurrent} of ${total}...`
+  const progressPercent = totalItems > 0 
+    ? Math.min(100, Math.round(((isComplete ? totalItems : currentIndex) / totalItems) * 100)) 
+    : 0
 
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className={`flex items-center gap-3 rounded-lg border border-[#223148]/12 bg-white px-4 py-3 ${className}`}
-    >
-      <span
-        className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
-          isComplete ? 'bg-[#2D5A3D]/10' : 'bg-[#223148]/8'
-        }`}
-      >
-        <span
-          className={`material-symbols-outlined text-[15px] ${
-            isComplete ? 'text-[#2D5A3D]' : 'text-[#223148] animate-spin'
-          }`}
-        >
-          {isComplete ? 'check_circle' : 'progress_activity'}
-        </span>
-      </span>
-
-      <div className="flex-1 flex flex-col gap-1.5">
-        <div className="flex items-center justify-between gap-2">
-          <span
-            className={`font-body-md text-[13px] ${
-              isComplete ? 'text-[#2D5A3D] font-semibold' : 'text-[#44474d]'
-            }`}
-          >
-            {label}
-          </span>
-          {hasStarted && !isComplete && (
-            <span className="font-code-md text-[11px] text-[#8a99b5] tracking-wide">
-              {clampedCurrent}/{total}
-            </span>
+    <div className={`w-full rounded-2xl bg-[#141414] border border-[#27272A] p-4 shadow-xl animate-fade-in ${className}`}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5">
+        <div className="flex items-center gap-3">
+          {isComplete ? (
+            <div className="w-8 h-8 rounded-xl bg-[#22C55E]/15 border border-[#22C55E]/30 flex items-center justify-center text-[#22C55E]">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+          ) : (
+            <div className="w-8 h-8 rounded-xl bg-[#FF6A00]/15 border border-[#FF6A00]/30 flex items-center justify-center text-[#FF6A00] animate-pulse">
+              <Cpu className="w-5 h-5" />
+            </div>
           )}
+
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="text-[14px] font-semibold text-white">
+                {isComplete
+                  ? `Extraction complete — ${totalItems} of ${totalItems} items processed`
+                  : `Extracting entry ${currentIndex} of ${totalItems}...`}
+              </span>
+              {!isComplete && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#FF6A00] bg-[#FF6A00]/10 px-2 py-0.5 rounded-full border border-[#FF6A00]/30">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Live Stream
+                </span>
+              )}
+            </div>
+            <span className="text-[12px] text-[#A1A1AA]">
+              {isComplete
+                ? 'AI synthesis and PII sanitization finished. Ready for review and commit.'
+                : 'Synthesizing problem statements, recovery steps, and unwritten runbook lore...'}
+            </span>
+          </div>
         </div>
 
-        <div className="h-1 w-full rounded-full bg-[#223148]/10 overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-[width] duration-500 ease-out ${
-              isComplete ? 'bg-[#2D5A3D]' : 'bg-[#223148]'
-            }`}
-            style={{ width: `${progressPct}%` }}
-          />
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <span className="font-mono text-[13px] font-bold text-[#FF6A00]">
+            {progressPercent}%
+          </span>
         </div>
+      </div>
+
+      {/* Animated Neon Progress Track */}
+      <div className="w-full h-2 rounded-full bg-[#1F1F23] overflow-hidden p-0.5">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${
+            isComplete
+              ? 'bg-[#22C55E]'
+              : 'bg-gradient-to-r from-[#FF6A00] to-[#EF2B2D]'
+          }`}
+          style={{ width: `${progressPercent}%` }}
+        />
       </div>
     </div>
   )
 }
 
-export default ExtractionCounter;
+export default ExtractionCounter

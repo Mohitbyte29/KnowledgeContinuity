@@ -1,23 +1,22 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import type { PersonaType } from '../components/shared/PersonaSelector'
+import type { Persona } from '../types'
+import { MOCK_PERSONAS } from '../data/mockData'
 
 const STORAGE_KEY = 'kc_user_context'
 
 interface StoredState {
-  persona: PersonaType | null
-  selectedProjectId: string | null
+  persona: Persona | null
+  selectedProjectId: string
 }
 
 interface UserContextValue {
-  persona: PersonaType | null
-  setPersona: (persona: PersonaType | null) => void
-  /** Matches ProjectDropdown's value/onChange contract directly — pass these straight through. */
-  selectedProjectId: string | null
-  setSelectedProjectId: (projectId: string | null) => void
-  /** True once a persona has been selected on LoginPage. */
+  persona: Persona | null
+  setPersona: (persona: Persona | null) => void
+  selectedProjectId: string
+  setSelectedProjectId: (projectId: string) => void
   isAuthenticated: boolean
-  /** Resets persona and selected project, e.g. for a "switch persona" action during a demo. */
   logout: () => void
+  personas: Persona[]
 }
 
 const UserContext = createContext<UserContextValue | undefined>(undefined)
@@ -25,21 +24,20 @@ const UserContext = createContext<UserContextValue | undefined>(undefined)
 const loadStored = (): StoredState => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { persona: null, selectedProjectId: null }
+    if (!raw) return { persona: MOCK_PERSONAS[0], selectedProjectId: 'Payments Team' }
     const parsed = JSON.parse(raw)
     return {
-      persona: parsed.persona ?? null,
-      selectedProjectId: parsed.selectedProjectId ?? null,
+      persona: parsed.persona ?? MOCK_PERSONAS[0],
+      selectedProjectId: parsed.selectedProjectId ?? 'Payments Team',
     }
   } catch {
-    // localStorage unavailable (private browsing, SSR, etc.) — fall back to in-memory only
-    return { persona: null, selectedProjectId: null }
+    return { persona: MOCK_PERSONAS[0], selectedProjectId: 'Payments Team' }
   }
 }
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [persona, setPersonaState] = useState<PersonaType | null>(() => loadStored().persona)
-  const [selectedProjectId, setSelectedProjectIdState] = useState<string | null>(
+  const [persona, setPersonaState] = useState<Persona | null>(() => loadStored().persona)
+  const [selectedProjectId, setSelectedProjectIdState] = useState<string>(
     () => loadStored().selectedProjectId
   )
 
@@ -47,16 +45,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ persona, selectedProjectId }))
     } catch {
-      // ignore — persistence is a nice-to-have, not a requirement
+      // ignore
     }
   }, [persona, selectedProjectId])
 
-  const setPersona = (next: PersonaType | null) => setPersonaState(next)
-  const setSelectedProjectId = (next: string | null) => setSelectedProjectIdState(next)
+  const setPersona = (next: Persona | null) => setPersonaState(next)
+  const setSelectedProjectId = (next: string) => setSelectedProjectIdState(next)
 
   const logout = () => {
     setPersonaState(null)
-    setSelectedProjectIdState(null)
     try {
       localStorage.removeItem(STORAGE_KEY)
     } catch {
@@ -71,6 +68,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSelectedProjectId,
     isAuthenticated: persona !== null,
     logout,
+    personas: MOCK_PERSONAS,
   }
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>

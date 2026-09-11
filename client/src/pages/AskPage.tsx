@@ -1,389 +1,263 @@
-import { FormEvent, useState } from 'react'
-import Footer from '@/components/subparts/Footer'
-import Navbar from '@/components/subparts/Navbar'
+import React, { useState, useRef, useEffect } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
+import { Navbar } from '../components/shared/Navbar'
+import { ProjectDropdown } from '../components/shared/ProjectDropdown'
+import { ChatBubble } from '../components/retrieval/ChatBubble'
+import { EmptyStatePresets } from '../components/retrieval/EmptyStatePresets'
+import { useUserContext } from '../context/UserContext'
+import { MOCK_RETRIEVAL_KNOWLEDGE } from '../data/mockData'
+import type { ChatMessage } from '../types'
+import { 
+  Search, 
+  Send, 
+  Brain, 
+  Loader2, 
+  RotateCcw
+} from 'lucide-react'
 
-const AskPage = () => {
-  const [queryPrompt, setQueryPrompt] = useState('')
-  const [submittedQuery, setSubmittedQuery] = useState(
-    'Why did we disable connection pooling on checkout in March?',
-  )
+export const AskPage: React.FC = () => {
+  const { selectedProjectId, setSelectedProjectId } = useUserContext()
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [inputQuery, setInputQuery] = useState('')
+  const [isThinking, setIsThinking] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
-  const handleUserQuery = (event?: FormEvent<HTMLFormElement>) => {
-    event?.preventDefault()
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
 
-    const trimmedPrompt = queryPrompt.trim()
-    if (!trimmedPrompt) return
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, isThinking])
 
-    setSubmittedQuery(trimmedPrompt)
-    setQueryPrompt('')
+  // --- Search Execution Handler ---
+  const handleExecuteQuery = (queryText: string) => {
+    const trimmed = queryText.trim()
+    if (!trimmed || isThinking) return
+
+    const userMsgId = `user-${Date.now()}`
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+    const userMsg: ChatMessage = {
+      id: userMsgId,
+      sender: 'user',
+      text: trimmed,
+      timestamp: now,
+    }
+
+    setMessages((prev) => [...prev, userMsg])
+    setInputQuery('')
+    setIsThinking(true)
+
+    // Match query against mock knowledge or fallback
+    const lower = trimmed.toLowerCase()
+    let matchedKnowledge = MOCK_RETRIEVAL_KNOWLEDGE.default
+
+    if (lower.includes('stripe') || lower.includes('webhook') || lower.includes('429') || lower.includes('rate')) {
+      matchedKnowledge = MOCK_RETRIEVAL_KNOWLEDGE.stripe
+    } else if (lower.includes('redis') || lower.includes('lock') || lower.includes('settlement') || lower.includes('midnight') || lower.includes('timeout')) {
+      matchedKnowledge = MOCK_RETRIEVAL_KNOWLEDGE.redis
+    } else if (lower.includes('dns') || lower.includes('aurora') || lower.includes('failover') || lower.includes('postgres') || lower.includes('kms')) {
+      matchedKnowledge = MOCK_RETRIEVAL_KNOWLEDGE.dns
+    }
+
+    // Simulate AI synthesis latency (~600ms)
+    setTimeout(() => {
+      const aiMsg: ChatMessage = {
+        id: `ai-${Date.now()}`,
+        sender: 'ai',
+        text: matchedKnowledge.answer,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        sources: matchedKnowledge.sources.map((s, idx) => ({
+          id: `src-${idx}`,
+          title: s.title,
+          author: s.author,
+          authorInitials: s.authorInitials,
+          date: s.date,
+          sourceRef: s.sourceRef,
+          similarityScore: s.similarityScore,
+          snippet: s.snippet,
+          sourceType: s.sourceType,
+        })),
+        relatedExperts: matchedKnowledge.experts,
+        query: trimmed,
+      }
+
+      setMessages((prev) => [...prev, aiMsg])
+      setIsThinking(false)
+    }, 650)
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    handleExecuteQuery(inputQuery)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleExecuteQuery(inputQuery)
+    }
+  }
+
+  const handleFeedback = (msgId: string, rating: 'up' | 'down') => {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === msgId ? { ...m, feedback: rating } : m))
+    )
+  }
+
+  const handleClearChat = () => {
+    setMessages([])
   }
 
   return (
-    <div>
-      <Navbar/>
-      <main className="w-full pt-20 pb-16 mx-auto px-5 lg:px-8 flex-1">
-  <div className="max-w-6xl mx-auto flex flex-col gap-8">
-    <section className="flex flex-col gap-2 pt-2 border-b border-[#D4CFC0] pb-6">
-      <div className="flex items-center gap-2 text-[#2D5A3D] font-code-md text-[11px] tracking-widest uppercase font-semibold">
-        <span className="inline-block w-2 h-2 rounded-full bg-[#2D5A3D]" />
-        <span>Archival Dossier // Query Response</span>
-      </div>
-      <h1 className="font-display text-[36px] md:text-[42px] leading-[1.15] font-semibold text-[#223148] tracking-tight">
-        Ask the Knowledge Base
-      </h1>
-      <p className="font-body-md text-[16px] text-[#44474d] leading-relaxed">
-        Search what your team already knows.
-      </p>
-    </section>
-    <section className="flex flex-col gap-3">
-      <div className="flex items-center justify-between text-body-sm text-[#75777e] font-code-md text-[11px] px-1">
-        <span>SUBMITTED INQUIRY</span>
-        <span>SESSION #4092 · 14:32 UTC</span>
-      </div>
-      <div className="bg-[#f0e7dd]/60 border border-[#D4CFC0] rounded-lg p-4 md:p-5 flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <span className="text-[#2D5A3D] font-serif text-2xl leading-none mt-0.5 select-none font-bold">
-            “
-          </span>
-          <p
-            className="font-serif text-[18px] md:text-[20px] text-[#0c1c32] font-medium leading-snug tracking-tight"
-            id="displayed-query"
-          >
-            {submittedQuery}
-          </p>
-        </div>
-        <span className="font-code-md text-[10px] uppercase font-semibold text-[#2D5A3D] bg-[#2D5A3D]/10 px-2 py-0.5 rounded border border-[#2D5A3D]/20 shrink-0">
-          MATCH 98.4%
-        </span>
-      </div>
-    </section>
-    <article className="bg-white rounded-lg border border-[#D4CFC0] p-6 md:p-8 flex flex-col gap-6">
-      <div className="flex items-center justify-between border-b border-[#D4CFC0] pb-3">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#2D5A3D]" />
-          <span className="font-code-md text-[11px] font-bold uppercase tracking-widest text-[#2D5A3D]">
-            SYNTHESIZED ANSWER
-          </span>
-        </div>
-        <span className="font-code-md text-[10px] font-semibold uppercase tracking-wider text-[#223148] bg-[#f0e7dd] border border-[#D2C7B8] px-2 py-0.5 rounded">
-          POST-INCIDENT ANALYSIS
-        </span>
-      </div>
-      <div className="space-y-4 font-body-md text-[15px] leading-[26px] text-[#1f1b15]">
-        <p>
-          Connection pooling was bypassed in{" "}
-          <code className="font-code-md text-[12px] bg-[#f0e7dd] text-[#0c1c32] px-1.5 py-0.5 rounded font-semibold">
-            checkout-worker
-          </code>{" "}
-          during{" "}
-          <strong className="font-bold text-[#0c1c32] bg-[#f0e7dd]/70 px-1 py-0.5 rounded">
-            INC-419
-          </strong>{" "}
-          because the pooling daemon daemonized socket threads during burst
-          concurrency surges, prematurely saturating{" "}
-          <code className="font-code-md text-[12px] bg-[#f0e7dd] text-[#0c1c32] px-1.5 py-0.5 rounded font-semibold">
-            max_client_conn
-          </code>{" "}
-          limits across regional pods.
-        </p>
-        <p className="text-[#44474d]">
-          Under sudden load spikes (&gt;45k checkout req/sec), thread allocation
-          stalled prior to health-probe pings, resulting in cascading worker
-          timeouts. The remediation team bypassed persistent multiplexing,
-          switched{" "}
-          <code className="font-code-md text-[12px] bg-[#f0e7dd] text-[#0c1c32] px-1.5 py-0.5 rounded font-semibold">
-            pool_mode
-          </code>{" "}
-          to direct transaction leases, and capped client threads at 1,200 with
-          aggressive client idle reclaims.
-        </p>
-      </div>
-      <div className="rounded-md bg-[#223148] border border-[#2f486d] overflow-hidden text-white">
-        <div className="flex items-center justify-between px-3.5 py-2 bg-[#162338] border-b border-[#2f486d] text-[#bad3ff] font-code-md text-[11px] tracking-wider uppercase">
-          <span>Production Remediation Patch · INC-419 · ENV/PROD</span>
-          <button
-            className="hover:text-white flex items-center gap-1 transition-colors text-[11px] text-[#b8c7e4]"
-            onClick={() => navigator.clipboard.writeText('DATABASE_URL=postgres://app:sec@pooler.internal:6432/checkout?pool_mode=transaction&idle_timeout=2500ms')}
-          >
-            <span className="material-symbols-outlined text-[13px]">
-              content_copy
-            </span>
-            <span>Copy</span>
-          </button>
-        </div>
-        <div className="p-3.5 font-code-md text-[12px] leading-relaxed text-[#bad3ff] overflow-x-auto select-all">
-          <code>
-            DATABASE_URL=postgres://app:sec@pooler.internal:6432/checkout?pool_mode=transaction&amp;idle_timeout=2500ms
-          </code>
-        </div>
-      </div>
-      <div className="pt-4 border-t border-[#D4CFC0] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-[#223148] text-[#fdfaf7] font-code-md text-[12px] font-bold flex items-center justify-center shrink-0">
-            SC
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-body-md text-[13px] font-bold text-[#0c1c32]">
-                Sarah Chen
-              </span>
-              <span className="text-[#D4CFC0]">•</span>
-              <span className="font-label-sm text-[10px] uppercase tracking-wider text-[#505f78] font-semibold">
-                Former Principal DBRE
-              </span>
-            </div>
-            <span className="font-code-md text-[11px] text-[#75777e]">
-              Resolved in INC-419 · March 14, 2024
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5 self-end sm:self-auto">
-          <button
-            className="w-8 h-8 rounded-md flex items-center justify-center border border-[#D2C7B8] bg-[#f0e7dd]/40 text-[#44474d] hover:text-[#0c1c32] hover:border-[#223148] transition-colors"
-            title="Helpful"
-          >
-            <span className="material-symbols-outlined text-[16px]">
-              thumb_up
-            </span>
-          </button>
-          <button
-            className="w-8 h-8 rounded-md flex items-center justify-center border border-[#D2C7B8] bg-[#f0e7dd]/40 text-[#44474d] hover:text-[#0c1c32] hover:border-[#223148] transition-colors"
-            title="Not helpful"
-          >
-            <span className="material-symbols-outlined text-[16px]">
-              thumb_down
-            </span>
-          </button>
-          <button
-            className="w-8 h-8 rounded-md flex items-center justify-center border border-[#D2C7B8] bg-[#f0e7dd]/40 text-[#44474d] hover:text-[#0c1c32] hover:border-[#223148] transition-colors"
-            onClick={() => navigator.clipboard.writeText(window.location.href)}
-            title="Copy citation"
-          >
-            <span className="material-symbols-outlined text-[16px]">
-              content_copy
-            </span>
-          </button>
-          <button
-            className="w-8 h-8 rounded-md flex items-center justify-center border border-[#D2C7B8] bg-[#f0e7dd]/40 text-[#44474d] hover:text-[#0c1c32] hover:border-[#223148] transition-colors"
-            title="Share or Export"
-          >
-            <span className="material-symbols-outlined text-[16px]">share</span>
-          </button>
-        </div>
-      </div>
-    </article>
-    <section className="bg-[#f0e7dd]/40 rounded-lg border border-[#D4CFC0] p-6 flex flex-col gap-4">
-      <div className="flex items-center justify-between border-b border-[#D4CFC0] pb-2.5">
-        <span className="font-code-md text-[11px] uppercase tracking-widest text-[#223148] font-bold">
-          Source Citations &amp; Evidence (3)
-        </span>
-        <span className="font-code-md text-[10px] text-[#505f78]">
-          VERIFIED CITATIONS
-        </span>
-      </div>
-      <div className="flex flex-col gap-3">
-        <div className="flex items-start gap-3 p-3 bg-white rounded border border-[#D4CFC0]">
-          <span className="font-code-md text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#223148] text-[#fdfaf7] shrink-0">
-            INCIDENT
-          </span>
-          <div className="flex flex-col min-w-0 flex-1">
-            <div className="flex items-center justify-between">
-              <span className="font-code-md text-[12px] font-semibold text-[#0c1c32]">
-                INC-419 Postmortem
-              </span>
-              <span className="font-code-md text-[10px] font-bold text-[#2D5A3D]">
-                0.96 MATCH
-              </span>
-            </div>
-            <p className="font-body-sm text-[12px] text-[#44474d] mt-0.5">
-              Root cause analysis: socket descriptor exhaustion during burst
-              flash checkout spikes.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-3 p-3 bg-white rounded border border-[#D4CFC0]">
-          <span className="font-code-md text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#223148] text-[#fdfaf7] shrink-0">
-            PULL REQUEST
-          </span>
-          <div className="flex flex-col min-w-0 flex-1">
-            <div className="flex items-center justify-between">
-              <span className="font-code-md text-[12px] font-semibold text-[#0c1c32]">
-                PR #1048 (checkout-pooler)
-              </span>
-              <span className="font-code-md text-[10px] font-bold text-[#2D5A3D]">
-                0.91 MATCH
-              </span>
-            </div>
-            <p className="font-body-sm text-[12px] text-[#44474d] mt-0.5">
-              checkout-pooler config bypass for pgbouncer direct transaction
-              lease mode.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-3 p-3 bg-white rounded border border-[#D4CFC0]">
-          <span className="font-code-md text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#D2C7B8] text-[#223148] shrink-0">
-            SLACK CONV
-          </span>
-          <div className="flex flex-col min-w-0 flex-1">
-            <div className="flex items-center justify-between">
-              <span className="font-code-md text-[12px] font-semibold text-[#0c1c32]">
-                Slack #war-room-checkout
-              </span>
-              <span className="font-code-md text-[10px] font-bold text-[#2D5A3D]">
-                0.84 MATCH
-              </span>
-            </div>
-            <p className="font-body-sm text-[12px] text-[#44474d] mt-0.5">
-              Workaround for Envoy ingress keepalive TCP resets and timeout
-              mitigations.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-    <section className="bg-white rounded-lg border border-[#D4CFC0] p-6 flex flex-col gap-4">
-      <div className="border-b border-[#D4CFC0] pb-2.5">
-        <h2 className="font-display font-semibold text-[18px] text-[#223148]">
-          Related Experts
-        </h2>
-        <p className="font-body-sm text-[12px] text-[#505f78]">
-          Engineers with direct operational history on this service
-        </p>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="p-3 rounded border border-[#D4CFC0] bg-[#f0e7dd]/40 flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#223148] text-[#fdfaf7] font-code-md text-[11px] font-bold flex items-center justify-center shrink-0">
-              SC
-            </div>
-            <div>
-              <span className="font-body-md text-[12px] font-bold text-[#0c1c32] block">
-                Sarah Chen
-              </span>
-              <span className="font-code-md text-[10px] text-[#505f78] block">
-                Principal DBRE
-              </span>
-            </div>
-          </div>
-          <p className="font-body-sm text-[11px] text-[#44474d] leading-snug">
-            Author of INC-419 remediation &amp; connection pools
-          </p>
-        </div>
-        <div className="p-3 rounded border border-[#D4CFC0] bg-[#f0e7dd]/40 flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#223148] text-[#fdfaf7] font-code-md text-[11px] font-bold flex items-center justify-center shrink-0">
-              MV
-            </div>
-            <div>
-              <span className="font-body-md text-[12px] font-bold text-[#0c1c32] block">
-                Marcus Vance
-              </span>
-              <span className="font-code-md text-[10px] text-[#505f78] block">
-                Staff SRE
-              </span>
-            </div>
-          </div>
-          <p className="font-body-sm text-[11px] text-[#44474d] leading-snug">
-            Maintained Envoy ingress proxy config &amp; keepalive
-          </p>
-        </div>
-        <div className="p-3 rounded border border-[#D4CFC0] bg-[#f0e7dd]/40 flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#223148] text-[#fdfaf7] font-code-md text-[11px] font-bold flex items-center justify-center shrink-0">
-              ER
-            </div>
-            <div>
-              <span className="font-body-md text-[12px] font-bold text-[#0c1c32] block">
-                Elena Rostova
-              </span>
-              <span className="font-code-md text-[10px] text-[#505f78] block">
-                Staff Infra Engineer
-              </span>
-            </div>
-          </div>
-          <p className="font-body-sm text-[11px] text-[#44474d] leading-snug">
-            Author of Aurora connection failover runbook
-          </p>
-        </div>
-      </div>
-    </section>
-    <section className="flex flex-col gap-2.5">
-      <div className="flex items-center justify-between text-[#505f78] font-code-md text-[11px] px-1">
-        <span className="uppercase tracking-wider font-semibold text-[#0c1c32]">
-          Example Inquiry Presets
-        </span>
-        <span>CLICK TO LOAD</span>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <button
-          className="text-left px-3 py-1.5 rounded-full bg-white hover:bg-[#f0e7dd]/60 border border-[#D4CFC0] text-body-sm text-[12px] text-[#1f1b15] hover:text-[#0c1c32] transition-colors"
-          onClick={() => setQueryPrompt('How was the Redis memory leak mitigated during the v2.4 rollout?')}
-        >
-          "How was the Redis memory leak mitigated during the v2.4 rollout?"
-        </button>
-        <button
-          className="text-left px-3 py-1.5 rounded-full bg-white hover:bg-[#f0e7dd]/60 border border-[#D4CFC0] text-body-sm text-[12px] text-[#1f1b15] hover:text-[#0c1c32] transition-colors"
-          onClick={() => setQueryPrompt('What was the workaround for Envoy TCP keepalive timeouts?')}
-        >
-          "What was the workaround for Envoy TCP keepalive timeouts?"
-        </button>
-        <button
-          className="text-left px-3 py-1.5 rounded-full bg-white hover:bg-[#f0e7dd]/60 border border-[#D4CFC0] text-body-sm text-[12px] text-[#1f1b15] hover:text-[#0c1c32] transition-colors"
-          onClick={() => setQueryPrompt('Who owns the fallback manual DNS failover switch if primary Aurora cluster locks up?')}
-        >
-          "Who owns the fallback manual DNS failover switch if primary Aurora
-          cluster locks up?"
-        </button>
-      </div>
-    </section>
-    <section className="flex flex-col gap-2 pb-8">
-      <form
-        className="relative w-full"
-        id="ask-search-form"
-        onSubmit={handleUserQuery}
-      >
-        <div className="relative flex items-center bg-white rounded-xl border border-[#D4CFC0] shadow-xs focus-within:border-[#2D5A3D] focus-within:ring-2 focus-within:ring-[#2D5A3D]/20 transition-all">
-          <div className="pl-4 text-[#505f78] flex items-center pointer-events-none">
-            <span className="material-symbols-outlined text-[20px]">
-              manage_search
-            </span>
-          </div>
-          <input
-            autoComplete="off"
-            className="w-full py-3.5 pl-3 pr-14 bg-transparent font-body-md text-[14px] text-[#0c1c32] placeholder:text-[#8a99b5] focus:outline-none"
-            id="user-query-input"
-            onChange={(event) => setQueryPrompt(event.target.value)}
-            placeholder="Ask a follow-up or search past postmortems, PRs, and Slack discussions..."
-            type="text"
-            value={queryPrompt}
-          />
-          <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-[#2D5A3D] hover:bg-[#234730] text-white rounded-lg flex items-center justify-center transition-all shadow-xs"
-            title="Execute Query (⌘ + Enter)"
-            type="submit"
-          >
-            <span className="material-symbols-outlined text-[18px]">
-              arrow_forward
-            </span>
-          </button>
-        </div>
-      </form>
-      <div className="flex items-center justify-between text-[#505f78] font-code-md text-[11px] px-1">
-        <span>
-          Targeting:{" "}
-          <strong className="text-[#0c1c32] font-semibold">
-            Production Archive + Engineering Transcripts
-          </strong>
-        </span>
-        <span className="hidden sm:inline text-[#75777e]">
-          Press ⌘ + Enter to execute
-        </span>
-      </div>
-    </section>
-  </div>
-</main>
+    <div className="min-h-screen w-full bg-[#0A0A0A] text-white flex flex-col justify-between overflow-y-auto overflow-x-hidden">
+      {/* Persistent Top Navbar */}
+      <Navbar />
 
-<Footer/>
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 flex flex-col justify-between pb-10">
+        
+        {/* Top Control Bar: Title, Subtitle, Project Scope Selector */}
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#27272A]"
+        >
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#FF6A00] animate-pulse" />
+              <h1 className="text-[22px] sm:text-[24px] font-bold text-white tracking-tight">
+                Ask the Knowledge Base
+              </h1>
+            </div>
+            <p className="text-[13px] text-[#A1A1AA]">
+              Search what your team already knows with full source groundings.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <ProjectDropdown
+              selectedProject={selectedProjectId}
+              onSelectProject={setSelectedProjectId}
+            />
+
+            {messages.length > 0 && (
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleClearChat}
+                title="Reset conversation"
+                className="p-2 rounded-xl bg-[#141414] hover:bg-[#1c1c20] text-[#71717A] hover:text-white border border-[#27272A] transition-all"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </motion.button>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Chat Stream / Empty State Area */}
+        <div className="flex-1 py-6 min-h-[440px]">
+          {messages.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <EmptyStatePresets onSelectQuery={handleExecuteQuery} />
+            </motion.div>
+          ) : (
+            <div className="space-y-2">
+              <AnimatePresence>
+                {messages.map((msg) => (
+                  <motion.div
+                    key={msg.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35 }}
+                  >
+                    <ChatBubble
+                      message={msg}
+                      onFeedback={handleFeedback}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              {/* AI Thinking Animation */}
+              {isThinking && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-start gap-3.5 mb-6"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FF6A00] to-[#EF2B2D] text-white flex items-center justify-center shrink-0 shadow-lg shadow-[#FF6A00]/25 animate-pulse">
+                    <Brain className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="rounded-2xl rounded-tl-sm bg-[#141414] border border-[#27272A] p-4 flex items-center gap-3 text-[13px] text-[#A1A1AA] shadow-lg">
+                    <Loader2 className="w-4 h-4 text-[#FF6A00] animate-spin" />
+                    <span>Searching vector indexes &amp; synthesizing answer...</span>
+                  </div>
+                </motion.div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Fixed-Style Input Bar */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="pt-3 pb-2"
+        >
+          <form onSubmit={handleSubmit} className="relative">
+            <div className="relative flex items-center bg-[#141414] hover:bg-[#18181B] rounded-2xl border border-[#27272A] focus-within:border-[#FF6A00] focus-within:ring-2 focus-within:ring-[#FF6A00]/20 shadow-2xl transition-all">
+              <div className="pl-4 text-[#71717A] flex items-center pointer-events-none">
+                <Search className="w-5 h-5 text-[#FF6A00]" />
+              </div>
+
+              <input
+                type="text"
+                value={inputQuery}
+                onChange={(e) => setInputQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Describe your bug or question (e.g. Stripe webhook retries, Redis lock timeouts)..."
+                disabled={isThinking}
+                className="w-full py-4 pl-3.5 pr-14 bg-transparent text-[14px] text-white placeholder:text-[#71717A] outline-none"
+              />
+
+              <motion.button
+                type="submit"
+                whileHover={inputQuery.trim() && !isThinking ? { scale: 1.05 } : {}}
+                whileTap={inputQuery.trim() && !isThinking ? { scale: 0.95 } : {}}
+                disabled={!inputQuery.trim() || isThinking}
+                title="Send query (Enter)"
+                className={`absolute right-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-md ${
+                  inputQuery.trim() && !isThinking
+                    ? 'bg-gradient-to-r from-[#FF6A00] to-[#EF2B2D] hover:from-[#FF8533] text-white shadow-[#FF6A00]/30'
+                    : 'bg-[#1F1F23] text-[#52525B] cursor-not-allowed'
+                }`}
+              >
+                <Send className="w-4 h-4" />
+              </motion.button>
+            </div>
+          </form>
+
+          <div className="flex items-center justify-between text-[11px] text-[#52525B] font-mono px-2 pt-2">
+            <span>
+              Targeting: <strong className="text-[#A1A1AA] font-semibold">{selectedProjectId}</strong>
+            </span>
+            <span className="hidden sm:inline">
+              Press Enter ↵ to search
+            </span>
+          </div>
+        </motion.div>
+
+      </main>
     </div>
   )
 }
