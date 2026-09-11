@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
+import { motion } from 'motion/react'
 import type { KnowledgeDraft } from '../../types'
 import { PiiMaskedBadge } from '../shared/PiiMaskedBadge'
 import { 

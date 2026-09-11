@@ -1,4 +1,4 @@
-export type PersonaRoleType = 'departing' | 'new_hire' | 'manager'
+export type PersonaRoleType = 'new_hire' | 'current_employee' | 'departing' | 'switcher' | 'manager'
 
 export interface Persona {
   id: string
@@ -9,7 +9,7 @@ export interface Persona {
   avatarInitials: string
   bio: string
   badgeLabel: string
-  targetRoute: '/capture' | '/ask'
+  targetRoute: '/capture' | '/ask' | '/dashboard'
   highlightColor?: string
 }
 
@@ -97,4 +97,49 @@ export interface ChatMessage {
   relatedExperts?: Expert[]
   feedback?: 'up' | 'down' | null
   query?: string
+}
+
+// --- Manager Dashboard Types ---
+
+export type RiskLevel = 'high' | 'medium' | 'low'
+
+export interface ConcentrationRiskItem {
+  project: string
+  totalEntries: number
+  topAuthor: string
+  topAuthorShare: number
+  riskLevel: RiskLevel
+}
+
+export interface CoverageByProjectItem {
+  project: string
+  entryCount: number
+}
+
+export interface KnowledgeHealth {
+  avgConfidence: number
+  totalHelpful: number
+  totalOutdated: number
+  totalEntries: number
+}
+
+export interface CaptureActivityItem {
+  date: string
+  count: number
+}
+
+export interface LastGapCheck {
+  employeeName: string
+  totalMined: number
+  alreadyCapturedCount: number
+  gapsFound: number
+  ranAt: string
+}
+
+export interface DashboardSummary {
+  concentrationRisk: ConcentrationRiskItem[]
+  coverageByProject: CoverageByProjectItem[]
+  knowledgeHealth: KnowledgeHealth
+  captureActivity: CaptureActivityItem[]
+  lastGapCheck: LastGapCheck | null
 }

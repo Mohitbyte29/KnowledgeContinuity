@@ -1,41 +1,41 @@
-import type { Persona, SourceItem, KnowledgeDraft, GapItem, GapQuestion } from '../types'
+import type { Persona, SourceItem, KnowledgeDraft, GapItem, GapQuestion, DashboardSummary } from '../types'
 
 export const MOCK_PERSONAS: Persona[] = [
   {
-    id: 'priya-sharma',
-    name: 'Priya Sharma',
-    role: 'Staff Infrastructure & Payments Engineer',
-    department: 'Payments Team',
-    type: 'departing',
-    avatarInitials: 'PS',
-    bio: 'Departing after 3.5 years. Handing off core payment routing, webhook idempotency, and cluster failover mechanisms.',
-    badgeLabel: 'Departing — Payments Team',
-    targetRoute: '/capture',
-    highlightColor: '#FF6A00',
-  },
-  {
     id: 'raj-patel',
     name: 'Raj Patel',
-    role: 'Frontend & API Integration Engineer',
+    role: 'New Hire · Frontend & API Integration',
     department: 'Payments Team',
     type: 'new_hire',
     avatarInitials: 'RP',
-    bio: 'New hire onboarding to checkout pipelines, payment gateway webhooks, and rate-limiting protocols.',
+    bio: 'Onboarding to payment checkout pipelines, Stripe API webhooks, and rate-limiting protocols. Accesses Capture & Ask.',
     badgeLabel: 'New Hire — Payments Team',
     targetRoute: '/ask',
     highlightColor: '#3B82F6',
   },
   {
-    id: 'sarah-chen',
-    name: 'Sarah Chen',
-    role: 'Principal Reliability Engineer',
-    department: 'Core Platform (Switching to Payments)',
-    type: 'switcher',
-    avatarInitials: 'SC',
-    bio: 'Transitioning to Payments domain to harden transaction concurrency and database lease management.',
-    badgeLabel: 'Existing Employee — Switching to Payments',
-    targetRoute: '/ask',
-    highlightColor: '#A855F7',
+    id: 'priya-sharma',
+    name: 'Priya Sharma',
+    role: 'Current Employee · Staff Platform Engineer',
+    department: 'Payments Team',
+    type: 'current_employee',
+    avatarInitials: 'PS',
+    bio: 'Logging daily tickets, merged PRs, and offboarding gap handoffs into institutional memory. Accesses Capture & Ask.',
+    badgeLabel: 'Current Employee — Payments Team',
+    targetRoute: '/capture',
+    highlightColor: '#FF6A00',
+  },
+  {
+    id: 'elena-rostova',
+    name: 'Elena Rostova',
+    role: 'Engineering Manager · Team Lead',
+    department: 'Engineering Leadership',
+    type: 'manager',
+    avatarInitials: 'ER',
+    bio: 'Monitors team concentration risk, offboarding gap audits, and knowledge health. Unlocks the Manager Dashboard + Capture & Ask.',
+    badgeLabel: 'Engineering Manager — Leadership',
+    targetRoute: '/dashboard',
+    highlightColor: '#EF2B2D',
   },
 ]
 
@@ -325,6 +325,70 @@ export const MOCK_GAP_QUESTIONS: GapQuestion[] = [
     isSaved: true,
   },
 ]
+
+export const MOCK_DASHBOARD_SUMMARY: DashboardSummary = {
+  concentrationRisk: [
+    {
+      project: 'Payments Platform',
+      totalEntries: 48,
+      topAuthor: 'Priya Sharma',
+      topAuthorShare: 83,
+      riskLevel: 'high',
+    },
+    {
+      project: 'Core Infrastructure',
+      totalEntries: 36,
+      topAuthor: 'Marcus Vance',
+      topAuthorShare: 58,
+      riskLevel: 'medium',
+    },
+    {
+      project: 'Checkout & Mobile API',
+      totalEntries: 29,
+      topAuthor: 'Sarah Chen',
+      topAuthorShare: 31,
+      riskLevel: 'low',
+    },
+    {
+      project: 'Auth & Identity Services',
+      totalEntries: 22,
+      topAuthor: 'Alex Rivera',
+      topAuthorShare: 27,
+      riskLevel: 'low',
+    },
+  ],
+  coverageByProject: [
+    { project: 'Payments Platform', entryCount: 48 },
+    { project: 'Core Infrastructure', entryCount: 36 },
+    { project: 'Checkout & Mobile API', entryCount: 29 },
+    { project: 'Auth & Identity Services', entryCount: 22 },
+  ],
+  knowledgeHealth: {
+    avgConfidence: 94.2,
+    totalHelpful: 148,
+    totalOutdated: 4,
+    totalEntries: 135,
+  },
+  captureActivity: [
+    { date: 'Sep 02', count: 6 },
+    { date: 'Sep 03', count: 8 },
+    { date: 'Sep 04', count: 5 },
+    { date: 'Sep 05', count: 11 },
+    { date: 'Sep 06', count: 9 },
+    { date: 'Sep 07', count: 2 },
+    { date: 'Sep 08', count: 12 },
+    { date: 'Sep 09', count: 14 },
+    { date: 'Sep 10', count: 10 },
+    { date: 'Sep 11', count: 16 },
+  ],
+  lastGapCheck: {
+    employeeName: 'Priya Sharma',
+    totalMined: 48,
+    alreadyCapturedCount: 42,
+    gapsFound: 6,
+    ranAt: 'Today at 1:45 PM · Archival Session #4092',
+  },
+}
 
 export const MOCK_RETRIEVAL_KNOWLEDGE: Record<string, {
   answer: string

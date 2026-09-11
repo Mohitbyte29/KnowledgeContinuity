@@ -42,6 +42,7 @@ export const endpoints = {
   search: (query: string, projectId?: string) => api.post('/query/search', { query, projectId }),
   submitFeedback: (entryId: string, rating: 'up' | 'down') => api.post('/query/feedback', { entryId, rating }),
   getQueryHistory: () => api.get('/query/history'),
+  getDashboardSummary: () => api.get('/dashboard/summary'),
 }
 
 export default api

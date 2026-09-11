@@ -8,7 +8,8 @@ import {
   ChevronDown, 
   LogOut, 
   Check, 
-  Layers
+  Layers,
+  BarChart3
 } from 'lucide-react'
 
 export const Navbar: React.FC = () => {
@@ -19,11 +20,14 @@ export const Navbar: React.FC = () => {
 
   const isCapture = location.pathname === '/capture'
   const isAsk = location.pathname === '/ask'
+  const isDashboard = location.pathname === '/dashboard'
 
   const handleSelectPersona = (p: typeof personas[0]) => {
     setPersona(p)
     setIsDropdownOpen(false)
-    if (p.type === 'departing') {
+    if (p.type === 'manager') {
+      navigate('/dashboard')
+    } else if (p.type === 'current_employee' || p.type === 'departing') {
       navigate('/capture')
     } else {
       navigate('/ask')
@@ -42,7 +46,7 @@ export const Navbar: React.FC = () => {
         {/* Left: Brand Identity */}
         <div className="flex items-center gap-6">
           <Link 
-            to={persona?.type === 'departing' ? '/capture' : '/ask'} 
+            to={persona?.type === 'manager' ? '/dashboard' : (persona?.type === 'current_employee' || persona?.type === 'departing') ? '/capture' : '/ask'} 
             className="flex items-center gap-3 group transition-transform active:scale-95"
           >
             <motion.div 
@@ -53,9 +57,9 @@ export const Navbar: React.FC = () => {
             </motion.div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-[16px] sm:text-[17px] tracking-tight text-white group-hover:text-[#FF6A00] transition-colors">
+                <Link to="/login" className="font-bold text-[16px] sm:text-[17px] tracking-tight text-white group-hover:text-[#FF6A00] transition-colors">
                   Knowledge Continuity
-                </span>
+                </Link>
                 <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FF6A00]/10 text-[#FF6A00] border border-[#FF6A00]/30">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#FF6A00] animate-pulse" />
                   AI MEMORY
@@ -72,7 +76,7 @@ export const Navbar: React.FC = () => {
         <nav className="flex items-center bg-[#141414] border border-[#27272A] rounded-xl p-1 gap-1 shadow-inner">
           <Link
             to="/capture"
-            className={`relative flex items-center gap-2 px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-all duration-200 ${
+            className={`relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-all duration-200 ${
               isCapture
                 ? 'bg-gradient-to-r from-[#FF6A00] to-[#EF2B2D] text-white shadow-md shadow-[#FF6A00]/25'
                 : 'text-[#A1A1AA] hover:text-white hover:bg-[#1f1f23]'
@@ -84,7 +88,7 @@ export const Navbar: React.FC = () => {
 
           <Link
             to="/ask"
-            className={`relative flex items-center gap-2 px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-all duration-200 ${
+            className={`relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-all duration-200 ${
               isAsk
                 ? 'bg-gradient-to-r from-[#FF6A00] to-[#EF2B2D] text-white shadow-md shadow-[#FF6A00]/25'
                 : 'text-[#A1A1AA] hover:text-white hover:bg-[#1f1f23]'
@@ -93,6 +97,20 @@ export const Navbar: React.FC = () => {
             <Search className="w-4 h-4" />
             <span>Ask</span>
           </Link>
+
+          {persona?.type === 'manager' && (
+            <Link
+              to="/dashboard"
+              className={`relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg text-[13px] font-semibold transition-all duration-200 ${
+                isDashboard
+                  ? 'bg-gradient-to-r from-[#FF6A00] to-[#EF2B2D] text-white shadow-md shadow-[#FF6A00]/25'
+                  : 'text-[#A1A1AA] hover:text-white hover:bg-[#1f1f23]'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>Dashboard</span>
+            </Link>
+          )}
         </nav>
 
         {/* Right: Persona & Quick Switcher */}
