@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage'
 import CapturePage from './pages/CapturePage'
 import AskPage from './pages/AskPage'
 import DashboardPage from './pages/DashboardPage'
+import { ScrollToTop } from './components/shared/ScrollToTop'
 import { useUserContext } from './context/UserContext'
 
 // Guard component that restricts dashboard access strictly to Manager persona
@@ -27,7 +28,9 @@ const ManagerRoute: React.FC<{ children: React.ReactElement }> = ({ children }) 
 
 const App: React.FC = () => {
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/capture" element={<CapturePage />} />
       <Route path="/ask" element={<AskPage />} />
@@ -43,7 +46,8 @@ const App: React.FC = () => {
       <Route path="/" element={<Navigate to="/login" replace />} />
       {/* Fallback for unknown paths */}
       <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+      </Routes>
+    </>
   )
 }
 

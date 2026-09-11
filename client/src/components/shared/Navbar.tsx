@@ -45,32 +45,50 @@ export const Navbar: React.FC = () => {
         
         {/* Left: Brand Identity */}
         <div className="flex items-center gap-6">
-          <Link 
-            to={persona?.type === 'manager' ? '/dashboard' : (persona?.type === 'current_employee' || persona?.type === 'departing') ? '/capture' : '/ask'} 
-            className="flex items-center gap-3 group transition-transform active:scale-95"
-          >
-            <motion.div 
-              whileHover={{ rotate: 10, scale: 1.05 }}
-              className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#FF6A00] to-[#EF2B2D] flex items-center justify-center text-white shadow-lg shadow-[#FF6A00]/20 group-hover:shadow-[#FF6A00]/40 transition-all duration-300"
-            >
-              <Brain className="w-5 h-5 text-white" />
-            </motion.div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <Link to="/login" className="font-bold text-[16px] sm:text-[17px] tracking-tight text-white group-hover:text-[#FF6A00] transition-colors">
-                  Knowledge Continuity
-                </Link>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FF6A00]/10 text-[#FF6A00] border border-[#FF6A00]/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#FF6A00] animate-pulse" />
-                  AI MEMORY
-                </span>
-              </div>
-              <span className="text-[11px] text-[#71717A] hidden md:block">
-                Continuous Capture · Instant Retrieval
-              </span>
-            </div>
-          </Link>
-        </div>
+
+  {/* Logo + role-based navigation */}
+  <Link
+    to={
+      persona?.type === 'manager'
+        ? '/dashboard'
+        : persona?.type === 'current_employee' || persona?.type === 'departing'
+          ? '/capture'
+          : '/ask'
+    }
+    className="flex items-center gap-3 group transition-transform active:scale-95"
+  >
+    <motion.div
+      whileHover={{ rotate: 10, scale: 1.05 }}
+      className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#FF6A00] to-[#EF2B2D] flex items-center justify-center text-white shadow-lg shadow-[#FF6A00]/20 group-hover:shadow-[#FF6A00]/40 transition-all duration-300"
+    >
+      <Brain className="w-5 h-5 text-white" />
+    </motion.div>
+  </Link>
+
+  {/* Knowledge Continuity → /login */}
+  <div className="flex flex-col">
+    <div className="flex items-center gap-2">
+
+      <Link
+        to="/login"
+        className="font-bold text-[16px] sm:text-[17px] tracking-tight text-white hover:text-[#FF6A00] transition-colors"
+      >
+        Knowledge Continuity
+      </Link>
+
+      <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FF6A00]/10 text-[#FF6A00] border border-[#FF6A00]/30">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#FF6A00] animate-pulse" />
+        AI MEMORY
+      </span>
+
+    </div>
+
+    <span className="text-[11px] text-[#71717A] hidden md:block">
+      Continuous Capture · Instant Retrieval
+    </span>
+  </div>
+
+</div>
 
         {/* Center: Navigation Tabs */}
         <nav className="flex items-center bg-[#141414] border border-[#27272A] rounded-xl p-1 gap-1 shadow-inner">

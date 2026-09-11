@@ -33,6 +33,7 @@ export const CapturePage: React.FC = () => {
   // --- Daily Batch State ---
   const [dailySources, setDailySources] = useState<SourceItem[]>(MOCK_DAILY_SOURCES)
   const [dailyDrafts, setDailyDrafts] = useState<KnowledgeDraft[]>(MOCK_DAILY_DRAFTS)
+  const [hasExtractedActivity, setHasExtractedActivity] = useState<boolean>(false)
   const [revealedDailyCount, setRevealedDailyCount] = useState<number>(0)
   const [isExtractingDaily, setIsExtractingDaily] = useState<boolean>(false)
   const [isDailyExtractionComplete, setIsDailyExtractionComplete] = useState<boolean>(false)
@@ -56,6 +57,11 @@ export const CapturePage: React.FC = () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
   }, [])
+
+  // --- Extract Knowledge Handler (Reveals Today's Activity) ---
+  const handleExtractKnowledge = () => {
+    setHasExtractedActivity(true)
+  }
 
   // --- Progressive Reveal Handler for Daily Batch ---
   const handleStartDailyExtraction = () => {
@@ -263,98 +269,126 @@ export const CapturePage: React.FC = () => {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-[#141414] border border-[#27272A] shadow-xl"
+                className="p-6 rounded-2xl bg-[#141414] border border-[#27272A] shadow-xl space-y-1.5"
               >
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2 text-[#FF6A00] text-[11px] font-bold uppercase tracking-wider">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Continuous Daily Capture</span>
-                  </div>
-                  <h1 className="text-[26px] sm:text-[30px] font-bold text-white tracking-tight">
-                    End of Day — Anything worth saving?
-                  </h1>
-                  <p className="text-[13px] text-[#A1A1AA] max-w-2xl leading-relaxed">
-                    Review today's completed tickets, merged PRs, and Slack incident threads. Click below to trigger AI structuring with automated PII masking.
-                  </p>
+                <div className="flex items-center gap-2 text-[#FF6A00] text-[11px] font-bold uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Continuous Daily Capture</span>
                 </div>
-
-                <motion.button
-                  type="button"
-                  whileHover={!isExtractingDaily && !isDailyExtractionComplete ? { scale: 1.03 } : {}}
-                  whileTap={!isExtractingDaily && !isDailyExtractionComplete ? { scale: 0.97 } : {}}
-                  onClick={handleStartDailyExtraction}
-                  disabled={isExtractingDaily || isDailyExtractionComplete}
-                  className={`flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-[14px] transition-all shadow-xl self-start md:self-center shrink-0 ${
-                    isDailyExtractionComplete
-                      ? 'bg-[#22C55E]/20 text-[#22C55E] border border-[#22C55E]/40 cursor-default'
-                      : isExtractingDaily
-                      ? 'bg-[#1F1F23] text-[#A1A1AA] border border-[#27272A] cursor-wait'
-                      : 'bg-gradient-to-r from-[#FF6A00] to-[#EF2B2D] hover:from-[#FF8533] text-white shadow-[#FF6A00]/25'
-                  }`}
-                >
-                  {isDailyExtractionComplete ? (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>All Items Extracted</span>
-                    </>
-                  ) : isExtractingDaily ? (
-                    <>
-                      <Cpu className="w-4 h-4 animate-spin" />
-                      <span>Extracting Items...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" />
-                      <span>Review Today's Items</span>
-                    </>
-                  )}
-                </motion.button>
+                <h1 className="text-[26px] sm:text-[30px] font-bold text-white tracking-tight">
+                  End of Day — Anything worth saving?
+                </h1>
+                <p className="text-[13px] text-[#A1A1AA] max-w-2xl leading-relaxed">
+                  Review today's completed tickets, merged PRs, and Slack incident threads. Click below to trigger AI structuring with automated PII masking.
+                </p>
               </motion.div>
 
-              {/* Dual Column Layout: Raw Sources (Left) & Structured Drafts (Right) */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                
-                {/* Column 1: Raw Completed Work Items */}
-                <div className="lg:col-span-5 space-y-4">
-                  <div className="flex items-center justify-between border-b border-[#27272A] pb-2">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-[16px] font-bold text-white">
-                        Today's Activity
-                      </h2>
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[#1F1F23] text-[#A1A1AA] border border-[#27272A]">
-                        {dailySources.length} items
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-[#71717A]">
-                      Auto-mined from tools
-                    </span>
-                  </div>
+              {/* Action Buttons below END OF DAY div */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[#141414] border border-[#27272A] shadow-lg"
+              >
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Button 1: Extract Knowledge */}
+                  <motion.button
+                    type="button"
+                    whileHover={!hasExtractedActivity ? { scale: 1.02 } : {}}
+                    whileTap={!hasExtractedActivity ? { scale: 0.98 } : {}}
+                    onClick={handleExtractKnowledge}
+                    className={`flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-[14px] transition-all duration-200 ${
+                      hasExtractedActivity
+                        ? 'bg-[#22C55E]/15 text-[#22C55E] border border-[#22C55E]/30 shadow-sm cursor-default'
+                        : 'bg-gradient-to-r from-[#FF6A00] to-[#EF2B2D] hover:from-[#FF8533] text-white shadow-lg shadow-[#FF6A00]/25 cursor-pointer'
+                    }`}
+                  >
+                    {hasExtractedActivity ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Knowledge Extracted</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Extract Knowledge</span>
+                      </>
+                    )}
+                  </motion.button>
 
-                  <div className="space-y-3">
-                    {dailySources.map((item, idx) => {
-                      const isExtractingThis = isExtractingDaily && revealedDailyCount === idx
-                      const isProcessedThis = idx < revealedDailyCount
-                      return (
-                        <SourceCard
-                          key={item.id}
-                          item={item}
-                          isProcessed={isProcessedThis}
-                          isExtracting={isExtractingThis}
-                        />
-                      )
-                    })}
-                  </div>
+                  {/* Button 2: Review Today's Items */}
+                  <motion.button
+                    type="button"
+                    whileHover={hasExtractedActivity && !isExtractingDaily && !isDailyExtractionComplete ? { scale: 1.02 } : {}}
+                    whileTap={hasExtractedActivity && !isExtractingDaily && !isDailyExtractionComplete ? { scale: 0.98 } : {}}
+                    onClick={handleStartDailyExtraction}
+                    disabled={!hasExtractedActivity || isExtractingDaily || isDailyExtractionComplete}
+                    className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-[14px] transition-all duration-200 ${
+                      !hasExtractedActivity
+                        ? 'bg-[#18181B] text-[#71717A] border border-[#27272A] cursor-not-allowed opacity-60'
+                        : isDailyExtractionComplete
+                        ? 'bg-[#22C55E]/20 text-[#22C55E] border border-[#22C55E]/40 cursor-default'
+                        : isExtractingDaily
+                        ? 'bg-[#1F1F23] text-[#A1A1AA] border border-[#27272A] cursor-wait'
+                        : 'bg-gradient-to-r from-[#FF6A00] to-[#EF2B2D] hover:from-[#FF8533] text-white shadow-lg shadow-[#FF6A00]/25 cursor-pointer'
+                    }`}
+                  >
+                    {isDailyExtractionComplete ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>All Items Extracted</span>
+                      </>
+                    ) : isExtractingDaily ? (
+                      <>
+                        <Cpu className="w-4 h-4 animate-spin" />
+                        <span>Extracting Items...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Review Today's Items</span>
+                      </>
+                    )}
+                  </motion.button>
                 </div>
 
-                {/* Column 2: Structured Knowledge Results */}
-                <div className="lg:col-span-7 space-y-4">
+                {/* Progress helper text on the right */}
+                <div className="flex items-center gap-2 text-[12px] text-[#A1A1AA] font-medium">
+                  {!hasExtractedActivity ? (
+                    <span className="flex items-center gap-1.5 text-[#71717A]">
+                      <AlertCircle className="w-3.5 h-3.5 text-[#FF6A00]" />
+                      Click <strong className="text-white">"Extract Knowledge"</strong> to view today's activity
+                    </span>
+                  ) : !isDailyExtractionComplete && !isExtractingDaily ? (
+                    <span className="flex items-center gap-1.5 text-[#22C55E]">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Activity loaded. Click <strong className="text-white">"Review Today's Items"</strong> to run AI structuring
+                    </span>
+                  ) : isExtractingDaily ? (
+                    <span className="flex items-center gap-1.5 text-[#FF6A00] animate-pulse">
+                      <Cpu className="w-3.5 h-3.5 animate-spin" />
+                      AI structuring in progress ({revealedDailyCount}/{dailyDrafts.length})...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-[#22C55E]">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      All items structured &amp; ready for commit
+                    </span>
+                  )}
+                </div>
+              </motion.div>
+
+              {!hasExtractedActivity ? (
+                /* Full width No structured Cards Extracted Yet state */
+                <motion.div 
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="w-full space-y-4"
+                >
                   <div className="flex items-center justify-between border-b border-[#27272A] pb-2">
                     <div className="flex items-center gap-2">
                       <h2 className="text-[16px] font-bold text-white">
                         Structured Knowledge Cards
                       </h2>
-                      <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-[#FF6A00]/15 text-[#FF6A00] border border-[#FF6A00]/30 font-bold">
-                        {dailyApprovedCount} of {dailyDrafts.length} approved
+                      <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-[#1F1F23] text-[#71717A] border border-[#27272A]">
+                        0 of {dailyDrafts.length} approved
                       </span>
                     </div>
                     <span className="text-[11px] text-[#71717A]">
@@ -362,43 +396,114 @@ export const CapturePage: React.FC = () => {
                     </span>
                   </div>
 
-                  {/* Progressive Reveal Counter */}
-                  <ExtractionCounter
-                    currentIndex={revealedDailyCount}
-                    totalItems={dailyDrafts.length}
-                    isComplete={isDailyExtractionComplete}
-                    isExtracting={isExtractingDaily}
-                  />
-
-                  {/* Cards List or Empty Placeholder */}
-                  {revealedDailyCount === 0 && !isExtractingDaily ? (
-                    <div className="rounded-2xl bg-[#141414] border border-dashed border-[#27272A] p-12 text-center flex flex-col items-center justify-center space-y-3">
-                      <div className="w-12 h-12 rounded-2xl bg-[#1F1F23] text-[#71717A] flex items-center justify-center">
-                        <Sparkles className="w-6 h-6 text-[#FF6A00]" />
-                      </div>
-                      <h3 className="text-[16px] font-bold text-white">
+                  <div className="rounded-2xl bg-[#141414] border border-dashed border-[#27272A] p-16 text-center flex flex-col items-center justify-center space-y-4 shadow-xl">
+                    <div className="w-14 h-14 rounded-2xl bg-[#1F1F23] text-[#71717A] flex items-center justify-center border border-[#27272A]">
+                      <Sparkles className="w-7 h-7 text-[#FF6A00]" />
+                    </div>
+                    <div className="space-y-1.5 max-w-md">
+                      <h3 className="text-[18px] font-bold text-white">
                         No Structured Cards Extracted Yet
                       </h3>
-                      <p className="text-[13px] text-[#A1A1AA] max-w-sm">
-                        Click <strong className="text-white">"Review Today's Items"</strong> to trigger the progressive AI structuring queue.
+                      <p className="text-[13px] text-[#A1A1AA] leading-relaxed">
+                        Click <strong className="text-white">"Extract Knowledge"</strong> above to load today's mined activity, then proceed with <strong className="text-white">"Review Today's Items"</strong> to generate structured knowledge cards.
                       </p>
                     </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {dailyDrafts.slice(0, revealedDailyCount).map((draft) => (
-                        <KnowledgeEntryCard
-                          key={draft.id}
-                          entry={draft}
-                          onApprove={handleApproveDailyDraft}
-                          onDiscard={handleDiscardDailyDraft}
-                          onUpdate={handleUpdateDailyDraft}
-                          onUnapprove={handleUnapproveDailyDraft}
-                        />
-                      ))}
+                  </div>
+                </motion.div>
+              ) : (
+                /* Dual Column Layout: Raw Sources (Left) & Structured Drafts (Right) */
+                <motion.div 
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+                >
+                  {/* Column 1: Raw Completed Work Items */}
+                  <div className="lg:col-span-5 space-y-4">
+                    <div className="flex items-center justify-between border-b border-[#27272A] pb-2">
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-[16px] font-bold text-white">
+                          Today's Activity
+                        </h2>
+                        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[#1F1F23] text-[#A1A1AA] border border-[#27272A]">
+                          {dailySources.length} items
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-[#71717A]">
+                        Auto-mined from tools
+                      </span>
                     </div>
-                  )}
-                </div>
-              </div>
+
+                    <div className="space-y-3">
+                      {dailySources.map((item, idx) => {
+                        const isExtractingThis = isExtractingDaily && revealedDailyCount === idx
+                        const isProcessedThis = idx < revealedDailyCount
+                        return (
+                          <SourceCard
+                            key={item.id}
+                            item={item}
+                            isProcessed={isProcessedThis}
+                            isExtracting={isExtractingThis}
+                          />
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Column 2: Structured Knowledge Results */}
+                  <div className="lg:col-span-7 space-y-4">
+                    <div className="flex items-center justify-between border-b border-[#27272A] pb-2">
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-[16px] font-bold text-white">
+                          Structured Knowledge Cards
+                        </h2>
+                        <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-[#FF6A00]/15 text-[#FF6A00] border border-[#FF6A00]/30 font-bold">
+                          {dailyApprovedCount} of {dailyDrafts.length} approved
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-[#71717A]">
+                        Ready for Knowledge Base
+                      </span>
+                    </div>
+
+                    {/* Progressive Reveal Counter */}
+                    <ExtractionCounter
+                      currentIndex={revealedDailyCount}
+                      totalItems={dailyDrafts.length}
+                      isComplete={isDailyExtractionComplete}
+                      isExtracting={isExtractingDaily}
+                    />
+
+                    {/* Cards List or Empty Placeholder */}
+                    {revealedDailyCount === 0 && !isExtractingDaily ? (
+                      <div className="rounded-2xl bg-[#141414] border border-dashed border-[#27272A] p-12 text-center flex flex-col items-center justify-center space-y-3">
+                        <div className="w-12 h-12 rounded-2xl bg-[#1F1F23] text-[#71717A] flex items-center justify-center">
+                          <Sparkles className="w-6 h-6 text-[#FF6A00]" />
+                        </div>
+                        <h3 className="text-[16px] font-bold text-white">
+                          No Structured Cards Extracted Yet
+                        </h3>
+                        <p className="text-[13px] text-[#A1A1AA] max-w-sm">
+                          Click <strong className="text-white">"Review Today's Items"</strong> to trigger the progressive AI structuring queue.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {dailyDrafts.slice(0, revealedDailyCount).map((draft) => (
+                          <KnowledgeEntryCard
+                            key={draft.id}
+                            entry={draft}
+                            onApprove={handleApproveDailyDraft}
+                            onDiscard={handleDiscardDailyDraft}
+                            onUpdate={handleUpdateDailyDraft}
+                            onUnapprove={handleUnapproveDailyDraft}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
 
               {/* Bottom Floating Bar */}
               <AnimatePresence>

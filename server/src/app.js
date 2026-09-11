@@ -3,8 +3,8 @@ import cors from "cors";
 import morgan from "morgan";
 import captureRoutes from "./routes/captureRoutes.js";
 import queryRoutes from "./routes/queryRoutes.js";
-import projectRoutes from "./routes/projectRoutes.js"; // ADD THIS
-// ...
+import projectRoutes from "./routes/projectRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 const app = express();
 
@@ -13,8 +13,9 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 app.use("/api/capture", captureRoutes);
-app.use("/api/query", queryRoutes); // ADD THIS
-app.use("/api/projects", projectRoutes); // ADD THIS
+app.use("/api/query", queryRoutes);
+app.use("/api/projects", projectRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 app.get("/api/ping", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });

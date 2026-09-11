@@ -28,7 +28,6 @@ const Navbar = () => {
     setMobileOpen(false)
   }, [location.pathname])
 
-  const isActive = (to: string) => (to === '/' ? location.pathname === '/' : location.pathname.startsWith(to))
 
   return (
     <div>
